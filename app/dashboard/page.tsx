@@ -47,35 +47,59 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-950">
+              Driver actions
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-600">
+              Post your commute route and allow passengers travelling in the
+              same direction to request a seat.
+            </p>
+
+            <Link
+              href="/journeys/new"
+              className="mt-5 inline-flex rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              Post a journey
+            </Link>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-950">
+              Passenger actions
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-600">
+              Search available journeys based on your origin, destination, and
+              travel date.
+            </p>
+
+            <Link
+              href="/"
+              className="mt-5 inline-flex rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Search journeys
+            </Link>
+          </div>
+        </div>
+
         <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-950">
-            Next planned features
+            Current prototype progress
           </h2>
 
           <ul className="mt-4 space-y-3 text-sm text-slate-700">
+            <li>✅ Homepage and commute search form</li>
+            <li>✅ Search journey UI and mock results</li>
             <li>✅ Frontend login and registration pages</li>
             <li>✅ Client-side validation using Zod</li>
-            <li>✅ Search journey UI and mock results</li>
+            <li>✅ Dashboard prototype</li>
+            <li>✅ Driver journey posting form prototype</li>
             <li>Next: connect Supabase Auth</li>
-            <li>Next: create journey posting form</li>
             <li>Next: replace mock journeys with database records</li>
           </ul>
-        </div>
-
-        <div className="mt-8 flex gap-3">
-          <Link
-            href="/"
-            className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
-          >
-            Back home
-          </Link>
-
-          <Link
-            href="/journeys/search"
-            className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-          >
-            View journeys
-          </Link>
         </div>
       </section>
     </main>
