@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
 
 const registerSchema = z
   .object({
@@ -28,15 +29,21 @@ type RegisterErrors = {
 };
 
 export function RegisterForm() {
-  const router = useRouter();
-
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [message, setMessage] = useState("");
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+
+    setIsSubmitting(true);
+    setFormError("");
+    setMessage("");
+
+    const formData = new FormData(form);
 
     const values = {
       fullName: String(formData.get("fullName") || ""),
@@ -50,16 +57,37 @@ export function RegisterForm() {
 
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
-      setMessage("");
+      setIsSubmitting(false);
       return;
     }
 
     setErrors({});
-    setMessage("Registration form validated successfully. Supabase Auth will be connected next.");
 
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 700);
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signUp({
+      email: result.data.email,
+      password: result.data.password,
+      options: {
+        data: {
+          full_name: result.data.fullName,
+          role: result.data.role,
+        },
+      },
+    });
+
+    if (error) {
+      setFormError(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setMessage(
+      "Account created. Please check your email to confirm your account, then log in."
+    );
+
+    form.reset();
+    setIsSubmitting(false);
   }
 
   return (
@@ -146,21 +174,33 @@ export function RegisterForm() {
           className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
         />
         {errors.confirmPassword ? (
-          <p className="mt-2 text-sm text-red-600">{errors.confirmPassword[0]}</p>
+          <p className="mt-2 text-sm text-red-600">
+            {errors.confirmPassword[0]}
+          </p>
         ) : null}
       </div>
 
+      {formError ? (
+        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          {formError}
+        </div>
+      ) : null}
+
       {message ? (
         <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {message}
+          <p>{message}</p>
+          <Link href="/login" className="mt-2 inline-flex font-semibold underline">
+            Go to login
+          </Link>
         </div>
       ) : null}
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Create account
+        {isSubmitting ? "Creating account..." : "Create account"}
       </button>
     </form>
   );

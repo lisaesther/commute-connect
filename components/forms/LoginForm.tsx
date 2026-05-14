@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -19,9 +20,15 @@ export function LoginForm() {
 
   const [errors, setErrors] = useState<LoginErrors>({});
   const [message, setMessage] = useState("");
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    setIsSubmitting(true);
+    setFormError("");
+    setMessage("");
 
     const formData = new FormData(event.currentTarget);
 
@@ -34,16 +41,29 @@ export function LoginForm() {
 
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
-      setMessage("");
+      setIsSubmitting(false);
       return;
     }
 
     setErrors({});
-    setMessage("Login form validated successfully. Supabase Auth will be connected next.");
 
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 700);
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: result.data.email,
+      password: result.data.password,
+    });
+
+    if (error) {
+      setFormError(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setMessage("Login successful. Redirecting to dashboard...");
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -80,6 +100,12 @@ export function LoginForm() {
         ) : null}
       </div>
 
+      {formError ? (
+        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          {formError}
+        </div>
+      ) : null}
+
       {message ? (
         <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           {message}
@@ -88,9 +114,10 @@ export function LoginForm() {
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Login
+        {isSubmitting ? "Logging in..." : "Login"}
       </button>
     </form>
   );

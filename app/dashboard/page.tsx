@@ -1,25 +1,49 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Navbar } from "@/components/layout/Navbar";
+import { createClient } from "@/lib/supabase/server";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const fullName = user.user_metadata?.full_name as string | undefined;
+  const role = user.user_metadata?.role as string | undefined;
+
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
 
       <section className="mx-auto max-w-6xl px-6 py-12">
-        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-          User dashboard
-        </p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+              User dashboard
+            </p>
 
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
-          Your commute dashboard
-        </h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
+              Your commute dashboard
+            </h1>
 
-        <p className="mt-3 max-w-2xl text-slate-600">
-          This dashboard is currently a frontend prototype. It will later show
-          real user data from Supabase, including posted journeys, booking
-          requests, saved routes, and journey history.
-        </p>
+            <p className="mt-3 max-w-2xl text-slate-600">
+              You are logged in as{" "}
+              <span className="font-semibold text-slate-900">
+                {fullName || user.email}
+              </span>
+              {role ? ` with role: ${role}.` : "."}
+            </p>
+          </div>
+
+          <LogoutButton />
+        </div>
 
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -93,12 +117,12 @@ export default function DashboardPage() {
           <ul className="mt-4 space-y-3 text-sm text-slate-700">
             <li>✅ Homepage and commute search form</li>
             <li>✅ Search journey UI and mock results</li>
-            <li>✅ Frontend login and registration pages</li>
-            <li>✅ Client-side validation using Zod</li>
-            <li>✅ Dashboard prototype</li>
+            <li>✅ Real Supabase Auth login and registration</li>
+            <li>✅ Protected dashboard route</li>
+            <li>✅ Logout functionality</li>
             <li>✅ Driver journey posting form prototype</li>
-            <li>Next: connect Supabase Auth</li>
-            <li>Next: replace mock journeys with database records</li>
+            <li>Next: create profiles table</li>
+            <li>Next: save posted journeys to database</li>
           </ul>
         </div>
       </section>
