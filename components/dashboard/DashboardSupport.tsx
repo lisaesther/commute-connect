@@ -3,6 +3,9 @@ import Link from "next/link";
 type DashboardSupportProps = {
   fullName?: string;
   role?: string;
+  profileCompletedAt?: string | null;
+  hasVehicle: boolean;
+  hasLoadError?: boolean;
 };
 
 const roleLabels: Record<string, string> = {
@@ -14,9 +17,47 @@ const roleLabels: Record<string, string> = {
 export function DashboardSupport({
   fullName,
   role,
+  profileCompletedAt,
+  hasVehicle,
+  hasLoadError = false,
 }: DashboardSupportProps) {
-  const hasBasicDetails = Boolean(fullName && role);
   const requiresVehicle = role === "driver" || role === "both";
+  const basicProfileComplete = Boolean(profileCompletedAt);
+  const driverSetupComplete = !requiresVehicle || hasVehicle;
+
+  const profileReady =
+    basicProfileComplete && driverSetupComplete;
+
+  let statusLabel = "Setup required";
+  let statusClassName = "bg-amber-100 text-amber-800";
+  let heading = "Complete your traveller profile";
+  let description =
+    "Add your personal details and travel preferences to complete your CommuteConnect profile.";
+  let actionLabel = "Complete Profile";
+  let nextStep =
+    "Add optional contact information, your general area, organisation details and matching preferences.";
+
+  if (basicProfileComplete && !driverSetupComplete) {
+    statusLabel = "Driver setup incomplete";
+    statusClassName = "bg-amber-100 text-amber-800";
+    heading = "Complete your driver setup";
+    description =
+      "Your basic profile is complete, but a primary vehicle is required before offering journeys.";
+    actionLabel = "Add Vehicle";
+    nextStep =
+      "Add your vehicle details and accept the driver declaration before posting journeys.";
+  }
+
+  if (profileReady) {
+    statusLabel = "Profile ready";
+    statusClassName = "bg-emerald-100 text-emerald-800";
+    heading = "Manage your traveller profile";
+    description =
+      "Your required profile setup is complete. Keep your information accurate as your travel needs change.";
+    actionLabel = "Edit Profile";
+    nextStep =
+      "Review your details regularly and update your vehicle or travel preferences when needed.";
+  }
 
   return (
     <section
@@ -29,6 +70,16 @@ export function DashboardSupport({
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          {hasLoadError ? (
+            <div
+              role="alert"
+              className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+            >
+              Some profile-readiness information could not be loaded.
+              Open your Profile screen to review the current details.
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
@@ -36,27 +87,19 @@ export function DashboardSupport({
               </p>
 
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-                Complete your traveller profile
+                {heading}
               </h2>
             </div>
 
             <span
-              className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-                hasBasicDetails
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-amber-100 text-amber-800"
-              }`}
+              className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${statusClassName}`}
             >
-              {hasBasicDetails
-                ? "Basic account ready"
-                : "Setup required"}
+              {statusLabel}
             </span>
           </div>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-            Your account is active. Additional profile information will help
-            improve trust, journey matching, and communication between
-            commuters.
+            {description}
           </p>
 
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -79,20 +122,68 @@ export function DashboardSupport({
                 {role ? roleLabels[role] || role : "Not selected"}
               </dd>
             </div>
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Basic profile
+              </dt>
+
+              <dd className="mt-2 text-sm font-semibold text-slate-900">
+                {basicProfileComplete
+                  ? "Completed"
+                  : "Not completed"}
+              </dd>
+            </div>
+
+            {requiresVehicle ? (
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Driver setup
+                </dt>
+
+                <dd className="mt-2 text-sm font-semibold text-slate-900">
+                  {hasVehicle
+                    ? "Primary vehicle added"
+                    : "Vehicle required"}
+                </dd>
+              </div>
+            ) : null}
           </dl>
 
-          <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-sm font-semibold text-emerald-900">
-              Details to add
+          <div
+            className={`mt-6 rounded-xl border p-4 ${
+              profileReady
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-amber-200 bg-amber-50"
+            }`}
+          >
+            <p
+              className={`text-sm font-semibold ${
+                profileReady
+                  ? "text-emerald-900"
+                  : "text-amber-950"
+              }`}
+            >
+              {profileReady ? "Keep details current" : "Next step"}
             </p>
 
-            <p className="mt-2 text-sm leading-6 text-emerald-800">
-              Organisation, optional phone number, travel preferences
-              {requiresVehicle
-                ? ", and vehicle information for offering rides."
-                : "."}
+            <p
+              className={`mt-2 text-sm leading-6 ${
+                profileReady
+                  ? "text-emerald-800"
+                  : "text-amber-900"
+              }`}
+            >
+              {nextStep}
             </p>
           </div>
+
+          <Link
+            href="/profile"
+            className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200"
+          >
+            {actionLabel}
+          </Link>
         </article>
 
         <article className="rounded-2xl bg-slate-950 p-6 text-white shadow-sm sm:p-8">
@@ -119,24 +210,28 @@ export function DashboardSupport({
           </h2>
 
           <p className="mt-4 text-sm leading-6 text-slate-300">
-            Meet in a public location, confirm journey and vehicle details, and
-            report any behaviour that makes you feel uncomfortable.
+            Meet in a public location, confirm journey and vehicle
+            details, and report behaviour that makes you feel
+            uncomfortable.
           </p>
 
           <ul className="mt-6 space-y-3 text-sm text-slate-300">
             <li className="flex items-start gap-3">
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-              Exact pickup information remains private before acceptance.
+              Exact pickup information remains private before
+              acceptance.
             </li>
 
             <li className="flex items-start gap-3">
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-              Confirm the driver, passenger, route and vehicle before travel.
+              Confirm the driver, passenger, route and vehicle before
+              travel.
             </li>
 
             <li className="flex items-start gap-3">
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-              Never share passwords or unnecessary sensitive information.
+              Never share passwords or unnecessary sensitive
+              information.
             </li>
           </ul>
 
