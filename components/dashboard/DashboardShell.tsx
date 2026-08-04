@@ -75,6 +75,23 @@ const navigationItems = [
       </svg>
     ),
   },
+  {
+    label: "Profile",
+    href: "/profile",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        aria-hidden="true"
+        className="h-5 w-5"
+      >
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    ),
+  },
 ];
 
 const roleLabels: Record<string, string> = {
