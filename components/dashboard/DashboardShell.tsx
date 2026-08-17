@@ -43,7 +43,7 @@ const navigationItems = [
   },
   {
     label: "Find a Ride",
-    href: "/",
+    href: "/journeys/search",
     icon: (
       <svg
         viewBox="0 0 24 24"

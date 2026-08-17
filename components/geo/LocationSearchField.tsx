@@ -11,6 +11,7 @@ type LocationSearchFieldProps = {
   id: string;
   label: string;
   placeholder: string;
+  initialQuery?: string;
   selectedLocation:
     | ConfirmedLocation
     | null;
@@ -29,13 +30,14 @@ export function LocationSearchField({
   id,
   label,
   placeholder,
+  initialQuery = "",
   selectedLocation,
   onLocationChange,
   error,
 }: LocationSearchFieldProps) {
   const [query, setQuery] =
     useState(
-      selectedLocation?.displayName ?? "",
+      selectedLocation?.displayName ?? initialQuery,
     );
 
   const [results, setResults] = useState<
