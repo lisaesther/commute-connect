@@ -76,7 +76,7 @@ export function DashboardStats({
         <StatCard
           label="Upcoming journeys"
           value={upcomingJourneys}
-          description="Accepted journeys that have not yet taken place."
+          description={role === "driver" || role === "both" ? "Open journeys you have posted with a future departure." : "Accepted passenger journeys that have not yet taken place."}
           icon={
             <svg
               viewBox="0 0 24 24"
@@ -117,7 +117,7 @@ export function DashboardStats({
         <StatCard
           label="Active posted journeys"
           value={activeJourneys}
-          description="Journeys you have posted that are still open or upcoming."
+          description={role === "driver" || role === "both" ? "Journey listings you currently have open." : "Journey posting activity will appear here if you offer rides."}
           icon={
             <svg
               viewBox="0 0 24 24"
