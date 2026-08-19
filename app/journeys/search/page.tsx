@@ -31,9 +31,10 @@ export default async function JourneySearchPage({
 
   const {
     data: profile,
+    error: profileError,
   } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, profile_completed_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -56,6 +57,38 @@ export default async function JourneySearchPage({
     profile?.role ||
     metadataRole ||
     "passenger";
+
+  const authoritativeRole =
+    profile?.role ?? null;
+
+  const canRequestSeats =
+    !profileError &&
+    profile?.profile_completed_at != null &&
+    (
+      authoritativeRole === "passenger" ||
+      authoritativeRole === "both"
+    );
+
+  let bookingEligibilityMessage:
+    | string
+    | undefined;
+
+  if (profileError) {
+    bookingEligibilityMessage =
+      "Seat requests are temporarily unavailable because your profile could not be verified.";
+  } else if (
+    !profile ||
+    profile.profile_completed_at == null
+  ) {
+    bookingEligibilityMessage =
+      "Complete your traveller profile before requesting seats.";
+  } else if (
+    authoritativeRole !== "passenger" &&
+    authoritativeRole !== "both"
+  ) {
+    bookingEligibilityMessage =
+      "Your profile is currently set to Driver. Choose Passenger or Both if you also want to request rides.";
+  }
 
   return (
     <DashboardShell
@@ -92,6 +125,10 @@ export default async function JourneySearchPage({
           initialDate={params.date ?? ""}
           initialTime={params.time ?? ""}
           initialSeats={params.seats ?? "1"}
+          canRequestSeats={canRequestSeats}
+          bookingEligibilityMessage={
+            bookingEligibilityMessage
+          }
         />
       </div>
     </DashboardShell>

@@ -14,6 +14,8 @@ type JourneySearchFormProps = {
   initialDate?: string;
   initialTime?: string;
   initialSeats?: string;
+  canRequestSeats: boolean;
+  bookingEligibilityMessage?: string;
 };
 
 export type JourneySearchResult = {
@@ -24,6 +26,7 @@ export type JourneySearchResult = {
   departure_at: string;
   departure_flexibility_minutes: number;
   seats_offered: number;
+  available_seats: number;
   suggested_contribution: number | null;
   luggage_preference: string;
   pets_preference: string;
@@ -47,50 +50,38 @@ export function JourneySearchForm({
   initialDate = "",
   initialTime = "",
   initialSeats = "1",
+  canRequestSeats,
+  bookingEligibilityMessage,
 }: JourneySearchFormProps) {
-  const supabase = useMemo(
-    () => createClient(),
-    [],
+  const supabase = useMemo(() => createClient(), []);
+
+  const [origin, setOrigin] = useState<ConfirmedLocation | null>(null);
+
+  const [destination, setDestination] = useState<ConfirmedLocation | null>(
+    null,
   );
 
-  const [origin, setOrigin] =
-    useState<ConfirmedLocation | null>(null);
+  const [date, setDate] = useState(initialDate);
 
-  const [destination, setDestination] =
-    useState<ConfirmedLocation | null>(null);
-
-  const [date, setDate] =
-    useState(initialDate);
-
-  const [time, setTime] =
-    useState(initialTime);
+  const [time, setTime] = useState(initialTime);
 
   const [seats, setSeats] = useState(
-    ["1", "2", "3", "4", "5", "6", "7", "8"].includes(
-      initialSeats,
-    )
+    ["1", "2", "3", "4", "5", "6", "7", "8"].includes(initialSeats)
       ? initialSeats
       : "1",
   );
 
-  const [errors, setErrors] =
-    useState<SearchErrors>({});
+  const [errors, setErrors] = useState<SearchErrors>({});
 
-  const [results, setResults] = useState<
-    JourneySearchResult[]
-  >([]);
+  const [results, setResults] = useState<JourneySearchResult[]>([]);
 
-  const [hasSearched, setHasSearched] =
-    useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const [isSearching, setIsSearching] =
-    useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const [message, setMessage] = useState("");
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (isSearching) {
@@ -100,34 +91,25 @@ export function JourneySearchForm({
     const nextErrors: SearchErrors = {};
 
     if (!origin) {
-      nextErrors.origin =
-        "Search for and confirm your starting location.";
+      nextErrors.origin = "Search for and confirm your starting location.";
     }
 
     if (!destination) {
-      nextErrors.destination =
-        "Search for and confirm your destination.";
+      nextErrors.destination = "Search for and confirm your destination.";
     }
 
     if (!date) {
-      nextErrors.date =
-        "Choose your travel date.";
+      nextErrors.date = "Choose your travel date.";
     }
 
     if (!time) {
-      nextErrors.time =
-        "Choose your preferred departure time.";
+      nextErrors.time = "Choose your preferred departure time.";
     }
 
     const seatsNeeded = Number(seats);
 
-    if (
-      !Number.isInteger(seatsNeeded) ||
-      seatsNeeded < 1 ||
-      seatsNeeded > 8
-    ) {
-      nextErrors.seats =
-        "Seats needed must be between 1 and 8.";
+    if (!Number.isInteger(seatsNeeded) || seatsNeeded < 1 || seatsNeeded > 8) {
+      nextErrors.seats = "Seats needed must be between 1 and 8.";
     }
 
     if (
@@ -136,8 +118,7 @@ export function JourneySearchForm({
       origin.latitude === destination.latitude &&
       origin.longitude === destination.longitude
     ) {
-      nextErrors.destination =
-        "Origin and destination must be different.";
+      nextErrors.destination = "Origin and destination must be different.";
     }
 
     setErrors(nextErrors);
@@ -151,30 +132,21 @@ export function JourneySearchForm({
       return;
     }
 
-    const preferredDeparture =
-      irelandLocalDateTimeToIso(
-        date,
-        time,
-      );
+    const preferredDeparture = irelandLocalDateTimeToIso(date, time);
 
     if (!preferredDeparture) {
       setErrors((current) => ({
         ...current,
-        time:
-          "Enter a valid future date and time for Ireland.",
+        time: "Enter a valid future date and time for Ireland.",
       }));
 
       return;
     }
 
-    if (
-      new Date(preferredDeparture).getTime() <=
-      Date.now()
-    ) {
+    if (new Date(preferredDeparture).getTime() <= Date.now()) {
       setErrors((current) => ({
         ...current,
-        time:
-          "Your preferred departure must be in the future.",
+        time: "Your preferred departure must be in the future.",
       }));
 
       return;
@@ -184,26 +156,17 @@ export function JourneySearchForm({
     setHasSearched(false);
     setResults([]);
 
-    const { data, error } = await supabase.rpc(
-      "search_journeys",
-      {
-        p_origin_lat: origin.latitude,
-        p_origin_lng: origin.longitude,
-        p_destination_lat:
-          destination.latitude,
-        p_destination_lng:
-          destination.longitude,
-        p_preferred_departure:
-          preferredDeparture,
-        p_seats_needed: seatsNeeded,
-      },
-    );
+    const { data, error } = await supabase.rpc("search_journeys", {
+      p_origin_lat: origin.latitude,
+      p_origin_lng: origin.longitude,
+      p_destination_lat: destination.latitude,
+      p_destination_lng: destination.longitude,
+      p_preferred_departure: preferredDeparture,
+      p_seats_needed: seatsNeeded,
+    });
 
     if (error) {
-      console.error(
-        "Journey search failed:",
-        error.message,
-      );
+      console.error("Journey search failed:", error.message);
 
       setMessage(
         "We could not search journeys right now. Please check your search and try again.",
@@ -214,8 +177,7 @@ export function JourneySearchForm({
       return;
     }
 
-    const safeResults =
-      (data ?? []) as JourneySearchResult[];
+    const safeResults = (data ?? []) as JourneySearchResult[];
 
     setResults(safeResults);
     setHasSearched(true);
@@ -238,10 +200,9 @@ export function JourneySearchForm({
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Search for approximate public locations.
-            The locations entered on the homepage are
-            suggestions until you select a confirmed
-            location result.
+            Search for approximate public locations. The locations entered on
+            the homepage are suggestions until you select a confirmed location
+            result.
           </p>
         </div>
 
@@ -305,6 +266,8 @@ export function JourneySearchForm({
                 value={date}
                 onChange={(event) => {
                   setDate(event.target.value);
+                  setResults([]);
+                  setHasSearched(false);
 
                   setErrors((current) => ({
                     ...current,
@@ -315,9 +278,7 @@ export function JourneySearchForm({
               />
 
               {errors.date ? (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.date}
-                </p>
+                <p className="mt-2 text-sm text-red-600">{errors.date}</p>
               ) : null}
             </div>
 
@@ -335,6 +296,8 @@ export function JourneySearchForm({
                 value={time}
                 onChange={(event) => {
                   setTime(event.target.value);
+                  setResults([]);
+                  setHasSearched(false);
 
                   setErrors((current) => ({
                     ...current,
@@ -349,9 +312,7 @@ export function JourneySearchForm({
               </p>
 
               {errors.time ? (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.time}
-                </p>
+                <p className="mt-2 text-sm text-red-600">{errors.time}</p>
               ) : null}
             </div>
 
@@ -368,6 +329,8 @@ export function JourneySearchForm({
                 value={seats}
                 onChange={(event) => {
                   setSeats(event.target.value);
+                  setResults([]);
+                  setHasSearched(false);
 
                   setErrors((current) => ({
                     ...current,
@@ -376,26 +339,17 @@ export function JourneySearchForm({
                 }}
                 className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
-                {Array.from(
-                  { length: 8 },
-                  (_, index) => index + 1,
-                ).map((value) => (
-                  <option
-                    key={value}
-                    value={value}
-                  >
-                    {value}{" "}
-                    {value === 1
-                      ? "seat"
-                      : "seats"}
-                  </option>
-                ))}
+                {Array.from({ length: 8 }, (_, index) => index + 1).map(
+                  (value) => (
+                    <option key={value} value={value}>
+                      {value} {value === 1 ? "seat" : "seats"}
+                    </option>
+                  ),
+                )}
               </select>
 
               {errors.seats ? (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.seats}
-                </p>
+                <p className="mt-2 text-sm text-red-600">{errors.seats}</p>
               ) : null}
             </div>
           </div>
@@ -416,9 +370,7 @@ export function JourneySearchForm({
             disabled={isSearching}
             className="rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSearching
-              ? "Searching journeys…"
-              : "Search journeys"}
+            {isSearching ? "Searching journeys…" : "Search journeys"}
           </button>
         </div>
       </form>
@@ -433,9 +385,7 @@ export function JourneySearchForm({
 
               <h2 className="mt-1 text-2xl font-bold text-slate-950">
                 {results.length} matching{" "}
-                {results.length === 1
-                  ? "journey"
-                  : "journeys"}
+                {results.length === 1 ? "journey" : "journeys"}
               </h2>
             </div>
           </div>
@@ -446,6 +396,9 @@ export function JourneySearchForm({
                 <JourneyCard
                   key={journey.journey_id}
                   journey={journey}
+                  requestedSeats={Number(seats)}
+                  canRequestSeats={canRequestSeats}
+                  bookingEligibilityMessage={bookingEligibilityMessage}
                 />
               ))}
             </div>
@@ -456,10 +409,9 @@ export function JourneySearchForm({
               </h3>
 
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">
-                No open journeys currently match
-                your confirmed locations, preferred
-                time and requested seats. Try another
-                time or nearby public location.
+                No open journeys currently match your confirmed locations,
+                preferred time and requested seats. Try another time or nearby
+                public location.
               </p>
             </div>
           )}

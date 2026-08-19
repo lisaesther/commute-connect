@@ -1,7 +1,11 @@
+import { BookingRequestButton } from "@/components/bookings/BookingRequestButton";
 import type { JourneySearchResult } from "@/components/forms/JourneySearchForm";
 
 type JourneyCardProps = {
   journey: JourneySearchResult;
+  requestedSeats: number;
+  canRequestSeats: boolean;
+  bookingEligibilityMessage?: string;
 };
 
 const luggageLabels: Record<string, string> = {
@@ -26,23 +30,23 @@ function formatDistance(meters: number) {
 }
 
 function formatDeparture(value: string) {
-  return new Intl.DateTimeFormat(
-    "en-IE",
-    {
-      timeZone: "Europe/Dublin",
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    },
-  ).format(new Date(value));
+  return new Intl.DateTimeFormat("en-IE", {
+    timeZone: "Europe/Dublin",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 export function JourneyCard({
   journey,
+  requestedSeats,
+  canRequestSeats,
+  bookingEligibilityMessage,
 }: JourneyCardProps) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -54,9 +58,7 @@ export function JourneyCard({
 
           <h3 className="mt-2 text-xl font-semibold leading-7 text-slate-950">
             {journey.origin_name}
-            <span className="mx-2 text-slate-400">
-              →
-            </span>
+            <span className="mx-2 text-slate-400">→</span>
             {journey.destination_name}
           </h3>
 
@@ -74,19 +76,17 @@ export function JourneyCard({
               </p>
 
               <p className="mt-1 font-medium text-slate-900">
-                {formatDeparture(
-                  journey.departure_at,
-                )}
+                {formatDeparture(journey.departure_at)}
               </p>
             </div>
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Seats offered
+                Available seats
               </p>
 
-              <p className="mt-1 font-medium text-slate-900">
-                {journey.seats_offered}
+              <p className="mt-1 font-semibold text-slate-950">
+                {journey.available_seats}
               </p>
             </div>
 
@@ -96,8 +96,7 @@ export function JourneyCard({
               </p>
 
               <p className="mt-1 font-medium text-slate-900">
-                {journey.departure_flexibility_minutes ===
-                0
+                {journey.departure_flexibility_minutes === 0
                   ? "Exact departure"
                   : `±${journey.departure_flexibility_minutes} minutes`}
               </p>
@@ -106,33 +105,23 @@ export function JourneyCard({
 
           <div className="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-slate-500">
-                Origin proximity
-              </p>
+              <p className="text-slate-500">Origin proximity</p>
 
               <p className="mt-1 font-semibold text-slate-900">
-                {formatDistance(
-                  journey.origin_distance_meters,
-                )}
+                {formatDistance(journey.origin_distance_meters)}
               </p>
             </div>
 
             <div>
-              <p className="text-slate-500">
-                Destination proximity
-              </p>
+              <p className="text-slate-500">Destination proximity</p>
 
               <p className="mt-1 font-semibold text-slate-900">
-                {formatDistance(
-                  journey.destination_distance_meters,
-                )}
+                {formatDistance(journey.destination_distance_meters)}
               </p>
             </div>
 
             <div>
-              <p className="text-slate-500">
-                Preferred-time difference
-              </p>
+              <p className="text-slate-500">Preferred-time difference</p>
 
               <p className="mt-1 font-semibold text-slate-900">
                 {journey.time_difference_minutes} min
@@ -144,54 +133,49 @@ export function JourneyCard({
             <span>
               Luggage:{" "}
               <strong className="font-medium text-slate-800">
-                {luggageLabels[
-                  journey.luggage_preference
-                ] ?? journey.luggage_preference}
+                {luggageLabels[journey.luggage_preference] ??
+                  journey.luggage_preference}
               </strong>
             </span>
 
             <span>
               Pets:{" "}
               <strong className="font-medium text-slate-800">
-                {petsLabels[
-                  journey.pets_preference
-                ] ?? journey.pets_preference}
+                {petsLabels[journey.pets_preference] ?? journey.pets_preference}
               </strong>
             </span>
 
             <span>
               Smoking:{" "}
               <strong className="font-medium text-slate-800">
-                {journey.smoking_allowed
-                  ? "Allowed"
-                  : "Not allowed"}
+                {journey.smoking_allowed ? "Allowed" : "Not allowed"}
               </strong>
             </span>
           </div>
         </div>
 
         <div className="shrink-0 rounded-xl bg-emerald-50 px-5 py-4 lg:min-w-48 lg:text-center">
-          <p className="text-sm text-slate-600">
-            Suggested contribution
-          </p>
+          <p className="text-sm text-slate-600">Suggested contribution</p>
 
           <p className="mt-1 text-xl font-bold text-emerald-700">
-            {journey.suggested_contribution ===
-            null
+            {journey.suggested_contribution === null
               ? "None"
-              : `€${Number(
-                  journey.suggested_contribution,
-                ).toFixed(2)}`}
+              : `€${Number(journey.suggested_contribution).toFixed(2)}`}
           </p>
         </div>
       </div>
 
-      <div className="mt-6 border-t border-slate-200 pt-4">
-        <p className="text-sm leading-6 text-slate-500">
-          Seat-request functionality will be added
-          in the next booking milestone. Exact
-          pickup and drop-off instructions remain
-          private.
+      <div className="mt-6 border-t border-slate-200 pt-5">
+        <BookingRequestButton
+          journeyId={journey.journey_id}
+          requestedSeats={requestedSeats}
+          canRequestSeats={canRequestSeats}
+          eligibilityMessage={bookingEligibilityMessage}
+        />
+
+        <p className="mt-4 text-sm leading-6 text-slate-500">
+          Exact pickup and drop-off instructions remain private until an
+          appropriate booking has been accepted.
         </p>
       </div>
     </article>

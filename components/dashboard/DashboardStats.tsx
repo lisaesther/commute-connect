@@ -50,18 +50,14 @@ export function DashboardStats({
   bookings = 0,
 }: DashboardStatsProps) {
   const pendingLabel =
-    role === "driver"
+    role === "driver" || role === "both"
       ? "Passenger requests"
-      : role === "passenger"
-        ? "Pending seat requests"
-        : "Pending requests";
+      : "Pending seat requests";
 
   const pendingDescription =
-    role === "driver"
+    role === "driver" || role === "both"
       ? "Passenger requests waiting for your response will appear here."
-      : role === "passenger"
-        ? "Seat requests awaiting a driver response will appear here."
-        : "Passenger and driver requests requiring attention will appear here.";
+      : "Seat requests awaiting a driver response will appear here.";
 
   return (
     <section
