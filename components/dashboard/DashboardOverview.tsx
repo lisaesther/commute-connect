@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+import { DriverBookingRequestActions } from "@/components/bookings/DriverBookingRequestActions";
+import {
+  PassengerBookingList,
+  type PassengerBookingSummary,
+} from "@/components/bookings/PassengerBookingList";
+
 export type DashboardUpcomingJourney = {
   id: string;
   origin: string;
@@ -10,9 +16,26 @@ export type DashboardUpcomingJourney = {
   status: string;
 };
 
+export type DashboardBookingRequest = {
+  bookingRequestId: string;
+  journeyId: string;
+  passengerName: string;
+  origin: string;
+  destination: string;
+  departureAt: string;
+  seatsRequested: number;
+  bookingStatus: string;
+  journeyStatus: string;
+  requestedAt: string;
+  respondedAt: string | null;
+  canRespond: boolean;
+};
+
 type DashboardOverviewProps = {
   role?: string;
   upcomingJourneys?: DashboardUpcomingJourney[];
+  bookingRequests?: DashboardBookingRequest[];
+  passengerBookings?: PassengerBookingSummary[];
 };
 
 function formatJourneyDate(
@@ -184,13 +207,146 @@ function UpcomingJourneyList({
   );
 }
 
+function bookingStatusClasses(
+  status: string,
+) {
+  if (status === "accepted") {
+    return "bg-emerald-100 text-emerald-800";
+  }
+
+  if (status === "declined") {
+    return "bg-red-100 text-red-800";
+  }
+
+  if (status === "withdrawn") {
+    return "bg-slate-200 text-slate-700";
+  }
+
+  return "bg-amber-100 text-amber-800";
+}
+
+function BookingRequestList({
+  requests,
+}: {
+  requests: DashboardBookingRequest[];
+}) {
+  return (
+    <div className="space-y-4">
+      {requests.map((request) => (
+        <article
+          key={request.bookingRequestId}
+          className="rounded-xl border border-slate-200 bg-slate-50 p-5"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${bookingStatusClasses(
+                    request.bookingStatus,
+                  )}`}
+                >
+                  {request.bookingStatus}
+                </span>
+
+                {request.journeyStatus !==
+                "open" ? (
+                  <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold capitalize text-slate-700">
+                    Journey{" "}
+                    {request.journeyStatus}
+                  </span>
+                ) : null}
+              </div>
+
+              <h3 className="mt-3 text-lg font-semibold text-slate-950">
+                {request.passengerName} requested{" "}
+                {request.seatsRequested}{" "}
+                {request.seatsRequested === 1
+                  ? "seat"
+                  : "seats"}
+              </h3>
+
+              <p className="mt-2 break-words text-sm font-medium leading-6 text-slate-800">
+                {request.origin}
+                <span className="mx-2 text-slate-400">
+                  →
+                </span>
+                {request.destination}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+                <span>
+                  <strong className="font-semibold text-slate-800">
+                    Departure:
+                  </strong>{" "}
+                  {formatJourneyDate(
+                    request.departureAt,
+                  )}{" "}
+                  at{" "}
+                  {formatJourneyTime(
+                    request.departureAt,
+                  )}
+                </span>
+
+                <span>
+                  <strong className="font-semibold text-slate-800">
+                    Requested:
+                  </strong>{" "}
+                  {formatJourneyDate(
+                    request.requestedAt,
+                  )}{" "}
+                  at{" "}
+                  {formatJourneyTime(
+                    request.requestedAt,
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {request.canRespond ? (
+            <DriverBookingRequestActions
+              bookingRequestId={
+                request.bookingRequestId
+              }
+              passengerName={
+                request.passengerName
+              }
+              seatsRequested={
+                request.seatsRequested
+              }
+            />
+          ) : request.bookingStatus ===
+            "pending" ? (
+            <p className="mt-4 rounded-lg bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-600">
+              This request can no longer be
+              actioned because the journey is not
+              open with a future departure.
+            </p>
+          ) : request.respondedAt ? (
+            <p className="mt-4 text-sm text-slate-500">
+              Responded{" "}
+              {formatJourneyDate(
+                request.respondedAt,
+              )}{" "}
+              at{" "}
+              {formatJourneyTime(
+                request.respondedAt,
+              )}
+            </p>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function EmptyRequestState({
   role,
 }: {
   role?: string;
 }) {
   const isDriver =
-    role === "driver";
+    role === "driver" || role === "both";
   const isPassenger =
     role === "passenger";
 
@@ -238,13 +394,16 @@ function EmptyRequestState({
 export function DashboardOverview({
   role,
   upcomingJourneys = [],
+  bookingRequests = [],
+  passengerBookings = [],
 }: DashboardOverviewProps) {
-  const requestHeading =
-    role === "driver"
-      ? "Passenger requests"
-      : role === "passenger"
-        ? "My seat requests"
-        : "Booking requests";
+  const canOfferRides =
+    role === "driver" || role === "both";
+
+  const showPassengerBookings =
+    role === "passenger" ||
+    role === "both" ||
+    passengerBookings.length > 0;
 
   return (
     <section
@@ -259,53 +418,91 @@ export function DashboardOverview({
       </h2>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              Your travel
-            </p>
+        {canOfferRides ? (
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                Your travel
+              </p>
 
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-              Upcoming journeys
-            </h2>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                Upcoming posted journeys
+              </h2>
 
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Your next open posted journeys and
-              future shared travel will appear here.
-            </p>
-          </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Your next open journeys offered to
+                passengers will appear here.
+              </p>
+            </div>
 
-          <div className="mt-6">
-            {upcomingJourneys.length > 0 ? (
-              <UpcomingJourneyList
-                journeys={upcomingJourneys}
+            <div className="mt-6">
+              {upcomingJourneys.length > 0 ? (
+                <UpcomingJourneyList
+                  journeys={upcomingJourneys}
+                />
+              ) : (
+                <EmptyJourneyState role={role} />
+              )}
+            </div>
+          </article>
+        ) : null}
+
+        {canOfferRides ? (
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                Requires attention
+              </p>
+
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                Passenger requests
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Review passenger requests and
+                booking-status updates for journeys
+                you have posted.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              {bookingRequests.length > 0 ? (
+                <BookingRequestList
+                  requests={bookingRequests}
+                />
+              ) : (
+                <EmptyRequestState role={role} />
+              )}
+            </div>
+          </article>
+        ) : null}
+
+        {showPassengerBookings ? (
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                Passenger travel
+              </p>
+
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                My bookings
+              </h2>
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                Track your seat requests, driver
+                responses, accepted journey
+                coordination details, and booking
+                history.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <PassengerBookingList
+                bookings={passengerBookings}
               />
-            ) : (
-              <EmptyJourneyState role={role} />
-            )}
-          </div>
-        </article>
-
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              Requires attention
-            </p>
-
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-              {requestHeading}
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Review journey requests and
-              booking-status updates.
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <EmptyRequestState role={role} />
-          </div>
-        </article>
+            </div>
+          </article>
+        ) : null}
       </div>
     </section>
   );
