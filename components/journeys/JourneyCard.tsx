@@ -186,8 +186,8 @@ export function JourneyCard({
         />
 
         <p className="mt-4 text-sm leading-6 text-slate-500">
-          Exact pickup and drop-off instructions remain private until an
-          appropriate booking has been accepted.
+          Exact pickup and drop-off instructions are private until a suitable
+          booking has been accepted.
         </p>
       </div>
     </article>

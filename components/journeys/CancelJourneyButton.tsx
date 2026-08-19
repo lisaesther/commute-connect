@@ -9,16 +9,12 @@ type CancelJourneyButtonProps = {
   journeyId: string;
 };
 
-export function CancelJourneyButton({
-  journeyId,
-}: CancelJourneyButtonProps) {
+export function CancelJourneyButton({ journeyId }: CancelJourneyButtonProps) {
   const router = useRouter();
 
-  const [isConfirming, setIsConfirming] =
-    useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const [isCancelling, setIsCancelling] =
-    useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -32,19 +28,12 @@ export function CancelJourneyButton({
 
     const supabase = createClient();
 
-    const { error: cancelError } =
-      await supabase.rpc(
-        "cancel_journey",
-        {
-          p_journey_id: journeyId,
-        },
-      );
+    const { error: cancelError } = await supabase.rpc("cancel_journey", {
+      p_journey_id: journeyId,
+    });
 
     if (cancelError) {
-      console.error(
-        "Journey cancellation failed:",
-        cancelError.message,
-      );
+      console.error("Journey cancellation failed:", cancelError.message);
 
       setError(
         "We could not cancel this journey. Please refresh the page and try again.",
@@ -68,16 +57,12 @@ export function CancelJourneyButton({
         </p>
 
         <p className="mt-2 text-sm leading-5 text-red-700">
-          The journey will no longer appear as
-          available or upcoming. This action cannot
-          be reversed from the current interface.
+          The journey will no longer be shown as available/upcoming. This action
+          cannot be undone from the current interface.
         </p>
 
         {error ? (
-          <p
-            role="alert"
-            className="mt-3 text-sm font-medium text-red-700"
-          >
+          <p role="alert" className="mt-3 text-sm font-medium text-red-700">
             {error}
           </p>
         ) : null}
@@ -89,9 +74,7 @@ export function CancelJourneyButton({
             disabled={isCancelling}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isCancelling
-              ? "Cancelling…"
-              : "Confirm Cancellation"}
+            {isCancelling ? "Cancelling…" : "Confirm Cancellation"}
           </button>
 
           <button

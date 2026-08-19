@@ -28,13 +28,10 @@ export function ProfileSetupHeader({
     completedSteps += 1;
   }
 
-  const progressPercentage = Math.round(
-    (completedSteps / totalSteps) * 100,
-  );
+  const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
   const profileComplete =
-    Boolean(profileCompletedAt) &&
-    (!requiresVehicle || hasVehicle);
+    Boolean(profileCompletedAt) && (!requiresVehicle || hasVehicle);
 
   return (
     <header className="rounded-3xl bg-slate-950 px-6 py-8 text-white shadow-lg sm:px-8 lg:px-10">
@@ -57,16 +54,14 @@ export function ProfileSetupHeader({
           </h1>
 
           <p className="mt-4 max-w-2xl leading-7 text-slate-300">
-            Add the information required for safer communication, useful
-            journey matching and responsible ride sharing.
+            Add the information needed for safer communication, useful journey
+            matching and responsible ride sharing.
           </p>
         </div>
 
         <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-white/5 p-5">
           <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-white">
-              Setup progress
-            </p>
+            <p className="text-sm font-semibold text-white">Setup progress</p>
 
             <p className="text-sm font-semibold text-emerald-300">
               {completedSteps} of {totalSteps}
