@@ -1,3 +1,4 @@
+import { AiMatchExplanation } from "@/components/ai/AiMatchExplanation";
 import { BookingRequestButton } from "@/components/bookings/BookingRequestButton";
 import type { JourneySearchResult } from "@/components/forms/JourneySearchForm";
 
@@ -164,6 +165,17 @@ export function JourneyCard({
           </p>
         </div>
       </div>
+
+      <AiMatchExplanation
+        originName={journey.origin_name}
+        destinationName={journey.destination_name}
+        departureAt={journey.departure_at}
+        requestedSeats={requestedSeats}
+        availableSeats={journey.available_seats}
+        originDistanceMeters={journey.origin_distance_meters}
+        destinationDistanceMeters={journey.destination_distance_meters}
+        timeDifferenceMinutes={journey.time_difference_minutes}
+      />
 
       <div className="mt-6 border-t border-slate-200 pt-5">
         <BookingRequestButton
