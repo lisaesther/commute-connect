@@ -19,35 +19,19 @@ function seatLabel(value: number) {
 function mapWithdrawalError(message: string) {
   const normalised = message.toLowerCase();
 
-  if (
-    normalised.includes(
-      "not available for withdrawal",
-    )
-  ) {
+  if (normalised.includes("not available for withdrawal")) {
     return "This booking request is no longer available for withdrawal.";
   }
 
-  if (
-    normalised.includes(
-      "cannot be withdrawn in its current state",
-    )
-  ) {
+  if (normalised.includes("cannot be withdrawn in its current state")) {
     return "This booking request can no longer be withdrawn.";
   }
 
-  if (
-    normalised.includes(
-      "cannot be withdrawn after departure",
-    )
-  ) {
+  if (normalised.includes("cannot be withdrawn after departure")) {
     return "This booking can no longer be withdrawn because the journey has already departed.";
   }
 
-  if (
-    normalised.includes(
-      "journey is not available",
-    )
-  ) {
+  if (normalised.includes("journey is not available")) {
     return "The associated journey is no longer available.";
   }
 
@@ -62,22 +46,15 @@ export function PassengerBookingRequestActions({
 }: PassengerBookingRequestActionsProps) {
   const router = useRouter();
 
-  const supabase = useMemo(
-    () => createClient(),
-    [],
-  );
+  const supabase = useMemo(() => createClient(), []);
 
-  const [isConfirming, setIsConfirming] =
-    useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [message, setMessage] =
-    useState("");
+  const [message, setMessage] = useState("");
 
-  const isAccepted =
-    bookingStatus === "accepted";
+  const isAccepted = bookingStatus === "accepted";
 
   async function confirmWithdrawal() {
     if (isSubmitting) {
@@ -87,23 +64,14 @@ export function PassengerBookingRequestActions({
     setIsSubmitting(true);
     setMessage("");
 
-    const { error } = await supabase.rpc(
-      "withdraw_booking_request",
-      {
-        p_booking_request_id:
-          bookingRequestId,
-      },
-    );
+    const { error } = await supabase.rpc("withdraw_booking_request", {
+      p_booking_request_id: bookingRequestId,
+    });
 
     if (error) {
-      console.error(
-        "Booking withdrawal failed:",
-        error.message,
-      );
+      console.error("Booking withdrawal failed:", error.message);
 
-      setMessage(
-        mapWithdrawalError(error.message),
-      );
+      setMessage(mapWithdrawalError(error.message));
 
       setIsSubmitting(false);
       return;
@@ -119,58 +87,33 @@ export function PassengerBookingRequestActions({
     return (
       <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
         <p className="font-semibold text-slate-950">
-          {isAccepted
-            ? "Withdraw accepted booking?"
-            : "Withdraw seat request?"}
+          {isAccepted ? "Withdraw accepted booking?" : "Withdraw seat request?"}
         </p>
 
         <p className="mt-2 text-sm leading-6 text-slate-700">
           {isAccepted ? (
             <>
-              You currently have{" "}
-              <strong>
-                {seatLabel(
-                  seatsRequested,
-                )}
-              </strong>{" "}
-              accepted with{" "}
-              <strong>
-                {driverName}
-              </strong>
-              . Withdrawing will release
-              these seats back to the
-              journey.
+              You currently have <strong>{seatLabel(seatsRequested)}</strong>{" "}
+              accepted with <strong>{driverName}</strong>. Withdrawing will
+              release these seats back to the journey.
             </>
           ) : (
             <>
               Withdraw your request for{" "}
-              <strong>
-                {seatLabel(
-                  seatsRequested,
-                )}
-              </strong>{" "}
-              from{" "}
-              <strong>
-                {driverName}
-              </strong>
-              ? The driver will no longer
-              be able to accept it.
+              <strong>{seatLabel(seatsRequested)}</strong> from{" "}
+              <strong>{driverName}</strong>? The driver will no longer be able
+              to accept it.
             </>
           )}
         </p>
 
         <p className="mt-2 text-sm leading-6 text-red-700">
-          This action keeps the booking
-          record for journey history, but
-          the request will no longer be
-          active.
+          This action will keep the booking record in the journey history but
+          the request will not be active.
         </p>
 
         {message ? (
-          <p
-            role="alert"
-            className="mt-3 text-sm font-medium text-red-700"
-          >
+          <p role="alert" className="mt-3 text-sm font-medium text-red-700">
             {message}
           </p>
         ) : null}
@@ -215,9 +158,7 @@ export function PassengerBookingRequestActions({
         }}
         className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
       >
-        {isAccepted
-          ? "Withdraw booking"
-          : "Withdraw request"}
+        {isAccepted ? "Withdraw booking" : "Withdraw request"}
       </button>
     </div>
   );

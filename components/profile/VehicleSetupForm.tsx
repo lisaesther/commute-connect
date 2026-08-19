@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-import {
-  maximumVehicleYear,
-  vehicleSchema,
-} from "@/lib/validation/vehicle";
+import { maximumVehicleYear, vehicleSchema } from "@/lib/validation/vehicle";
 
 type VehicleSetupFormProps = {
   userId: string;
@@ -37,13 +34,7 @@ const inputClassName =
 const errorInputClassName =
   "border-red-400 focus:border-red-500 focus:ring-red-100";
 
-function FieldError({
-  id,
-  errors,
-}: {
-  id: string;
-  errors?: string[];
-}) {
+function FieldError({ id, errors }: { id: string; errors?: string[] }) {
   if (!errors?.length) {
     return null;
   }
@@ -92,9 +83,7 @@ export function VehicleSetupForm({
   const [status, setStatus] = useState<FormStatus>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setErrors({});
@@ -108,12 +97,8 @@ export function VehicleSetupForm({
       model: String(formData.get("model") || ""),
       colour: String(formData.get("colour") || ""),
       year: String(formData.get("year") || ""),
-      passengerSeats: String(
-        formData.get("passengerSeats") || "",
-      ),
-      accessibilityNotes: String(
-        formData.get("accessibilityNotes") || "",
-      ),
+      passengerSeats: String(formData.get("passengerSeats") || ""),
+      accessibilityNotes: String(formData.get("accessibilityNotes") || ""),
       driverDeclarationAccepted:
         formData.get("driverDeclarationAccepted") === "on",
     };
@@ -132,8 +117,7 @@ export function VehicleSetupForm({
     }
 
     const declarationAcceptedAt =
-      initialVehicle?.driverDeclarationAcceptedAt ||
-      new Date().toISOString();
+      initialVehicle?.driverDeclarationAcceptedAt || new Date().toISOString();
 
     const vehicleData = {
       make: result.data.make,
@@ -141,21 +125,16 @@ export function VehicleSetupForm({
       colour: result.data.colour,
       year: result.data.year,
       passenger_seats: result.data.passengerSeats,
-      accessibility_notes:
-        result.data.accessibilityNotes || null,
+      accessibility_notes: result.data.accessibilityNotes || null,
       is_primary: true,
       is_active: true,
-      driver_declaration_accepted_at:
-        declarationAcceptedAt,
+      driver_declaration_accepted_at: declarationAcceptedAt,
     };
 
     const supabase = createClient();
 
     if (initialVehicle) {
-      const {
-        data: updatedVehicle,
-        error: vehicleError,
-      } = await supabase
+      const { data: updatedVehicle, error: vehicleError } = await supabase
         .from("vehicles")
         .update(vehicleData)
         .eq("id", initialVehicle.id)
@@ -167,18 +146,14 @@ export function VehicleSetupForm({
         setStatus({
           type: "error",
           message: getFriendlyVehicleError(
-            vehicleError?.message ||
-              "The vehicle record was not found.",
+            vehicleError?.message || "The vehicle record was not found.",
           ),
         });
         setIsSubmitting(false);
         return;
       }
     } else {
-      const {
-        data: createdVehicle,
-        error: vehicleError,
-      } = await supabase
+      const { data: createdVehicle, error: vehicleError } = await supabase
         .from("vehicles")
         .insert({
           ...vehicleData,
@@ -191,8 +166,7 @@ export function VehicleSetupForm({
         setStatus({
           type: "error",
           message: getFriendlyVehicleError(
-            vehicleError?.message ||
-              "The vehicle could not be created.",
+            vehicleError?.message || "The vehicle could not be created.",
           ),
         });
         setIsSubmitting(false);
@@ -232,9 +206,9 @@ export function VehicleSetupForm({
           </h2>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-            Vehicle information helps passengers identify the car
-            associated with an accepted journey. Registration numbers
-            and ownership documents are not collected at this stage.
+            Passengers use vehicle information to identify the vehicle for an
+            accepted journey. No registration numbers and ownership documents
+            are collected at this stage.
           </p>
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
@@ -255,9 +229,7 @@ export function VehicleSetupForm({
                 placeholder="For example, Toyota"
                 aria-invalid={Boolean(errors.make)}
                 aria-describedby={
-                  errors.make
-                    ? "vehicleMake-error"
-                    : "vehicleMake-description"
+                  errors.make ? "vehicleMake-error" : "vehicleMake-description"
                 }
                 className={`${inputClassName} ${
                   errors.make ? errorInputClassName : ""
@@ -271,10 +243,7 @@ export function VehicleSetupForm({
                 Enter the vehicle manufacturer.
               </p>
 
-              <FieldError
-                id="vehicleMake-error"
-                errors={errors.make}
-              />
+              <FieldError id="vehicleMake-error" errors={errors.make} />
             </div>
 
             <div>
@@ -294,19 +263,14 @@ export function VehicleSetupForm({
                 placeholder="For example, Corolla"
                 aria-invalid={Boolean(errors.model)}
                 aria-describedby={
-                  errors.model
-                    ? "vehicleModel-error"
-                    : undefined
+                  errors.model ? "vehicleModel-error" : undefined
                 }
                 className={`${inputClassName} ${
                   errors.model ? errorInputClassName : ""
                 }`}
               />
 
-              <FieldError
-                id="vehicleModel-error"
-                errors={errors.model}
-              />
+              <FieldError id="vehicleModel-error" errors={errors.model} />
             </div>
 
             <div>
@@ -342,10 +306,7 @@ export function VehicleSetupForm({
                 This helps passengers identify the correct vehicle.
               </p>
 
-              <FieldError
-                id="vehicleColour-error"
-                errors={errors.colour}
-              />
+              <FieldError id="vehicleColour-error" errors={errors.colour} />
             </div>
 
             <div>
@@ -354,9 +315,7 @@ export function VehicleSetupForm({
                 className="block text-sm font-medium text-slate-700"
               >
                 Vehicle year{" "}
-                <span className="font-normal text-slate-500">
-                  (optional)
-                </span>
+                <span className="font-normal text-slate-500">(optional)</span>
               </label>
 
               <input
@@ -369,18 +328,13 @@ export function VehicleSetupForm({
                 defaultValue={initialVehicle?.year || ""}
                 placeholder="For example, 2020"
                 aria-invalid={Boolean(errors.year)}
-                aria-describedby={
-                  errors.year ? "vehicleYear-error" : undefined
-                }
+                aria-describedby={errors.year ? "vehicleYear-error" : undefined}
                 className={`${inputClassName} ${
                   errors.year ? errorInputClassName : ""
                 }`}
               />
 
-              <FieldError
-                id="vehicleYear-error"
-                errors={errors.year}
-              />
+              <FieldError id="vehicleYear-error" errors={errors.year} />
             </div>
 
             <div>
@@ -406,9 +360,7 @@ export function VehicleSetupForm({
                     : "passengerSeats-description"
                 }
                 className={`${inputClassName} ${
-                  errors.passengerSeats
-                    ? errorInputClassName
-                    : ""
+                  errors.passengerSeats ? errorInputClassName : ""
                 }`}
               >
                 <option value="" disabled>
@@ -420,8 +372,7 @@ export function VehicleSetupForm({
 
                   return (
                     <option key={seats} value={seats}>
-                      {seats} passenger{" "}
-                      {seats === 1 ? "seat" : "seats"}
+                      {seats} passenger {seats === 1 ? "seat" : "seats"}
                     </option>
                   );
                 })}
@@ -431,8 +382,7 @@ export function VehicleSetupForm({
                 id="passengerSeats-description"
                 className="mt-2 text-xs leading-5 text-slate-500"
               >
-                Count passenger seats only; do not include the driver
-                seat.
+                Count passenger seats only; do not include the driver seat.
               </p>
 
               <FieldError
@@ -447,31 +397,23 @@ export function VehicleSetupForm({
                 className="block text-sm font-medium text-slate-700"
               >
                 Accessibility or practical information{" "}
-                <span className="font-normal text-slate-500">
-                  (optional)
-                </span>
+                <span className="font-normal text-slate-500">(optional)</span>
               </label>
 
               <textarea
                 id="accessibilityNotes"
                 name="accessibilityNotes"
                 rows={4}
-                defaultValue={
-                  initialVehicle?.accessibilityNotes || ""
-                }
+                defaultValue={initialVehicle?.accessibilityNotes || ""}
                 placeholder="For example, space for a folding wheelchair or limited luggage capacity."
-                aria-invalid={Boolean(
-                  errors.accessibilityNotes,
-                )}
+                aria-invalid={Boolean(errors.accessibilityNotes)}
                 aria-describedby={
                   errors.accessibilityNotes
                     ? "accessibilityNotes-error"
                     : "accessibilityNotes-description"
                 }
                 className={`${inputClassName} resize-y ${
-                  errors.accessibilityNotes
-                    ? errorInputClassName
-                    : ""
+                  errors.accessibilityNotes ? errorInputClassName : ""
                 }`}
               />
 
@@ -479,8 +421,8 @@ export function VehicleSetupForm({
                 id="accessibilityNotes-description"
                 className="mt-2 text-xs leading-5 text-slate-500"
               >
-                Maximum 500 characters. Do not include sensitive
-                personal information.
+                Maximum of 500 characters. Do not include sensitive personal
+                information.
               </p>
 
               <FieldError
@@ -507,10 +449,9 @@ export function VehicleSetupForm({
                 </span>
 
                 <span className="mt-2 block text-sm leading-6 text-amber-900">
-                  I confirm that I am legally permitted to drive this
-                  vehicle and that I am responsible for maintaining
-                  valid licensing, insurance and any required
-                  permission for cost-sharing journeys.
+                  I confirm that I am legally allowed to drive this vehicle and
+                  that I am responsible for keeping a valid license, insurance
+                  and any required permission for cost-sharing journeys.
                 </span>
               </span>
             </label>
@@ -523,9 +464,7 @@ export function VehicleSetupForm({
 
           {status ? (
             <div
-              role={
-                status.type === "error" ? "alert" : "status"
-              }
+              role={status.type === "error" ? "alert" : "status"}
               aria-live="polite"
               className={`mt-6 rounded-xl border p-4 text-sm leading-6 ${
                 status.type === "success"
@@ -578,21 +517,16 @@ export function VehicleSetupForm({
           </h3>
 
           <p className="mt-4 text-sm leading-6 text-slate-300">
-            CommuteConnect records the details you provide but does
-            not currently verify ownership, licensing or insurance.
+            CommuteConnect records the details you provide but does not
+            currently verify ownership, licensing or insurance.
           </p>
 
           <ul className="mt-6 space-y-4 text-sm leading-6 text-slate-300">
+            <li>Keep your vehicle information accurate and up to date.</li>
+            <li>Do not upload registration, licence or insurance documents.</li>
             <li>
-              Keep your vehicle information accurate and up to date.
-            </li>
-            <li>
-              Do not upload registration, licence or insurance
-              documents.
-            </li>
-            <li>
-              Journey-specific information such as pets, smoking and
-              luggage belongs in the journey form.
+              Journey-specific information such as pets, smoking and luggage
+              belongs in the journey form.
             </li>
           </ul>
         </aside>
